@@ -1,0 +1,50 @@
+service: lambda-test
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+package:
+  individually: true
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+  serverless-offline:
+    httpPort: 3300
+
+layers:
+  commonLayer:
+    path: layers/common
+    description: nodejs common modules
+
+functions:
+  handleSuccess:
+    handler: handlers/success.handleSuccess
+  handleError:
+    handler: handlers/error.handleError
+
+  first:
+    handler: handlers/first.hello
+    destinations:
+      onSuccess: handleSuccess
+      onFailure: handleError
+    events:
+      - http:
+          method: get
+          path: first
+
+  second:
+    handler: handlers/second.hello
+    layers:
+      - { Ref: CommonLayerLambdaLayer }
+    events:
+      - http:
+          method: get
+          path: second
+  
